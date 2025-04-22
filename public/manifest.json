@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
+  "name": "Data Loss Prevention",
+  "description": "Data Loss Prevention -- prevent uploading/downloading certain files",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png"
+  }
+}
