@@ -19,7 +19,6 @@ export function useChromeStorage<T>(key: string) {
     fetchData();
   }, [fetchData]);
 
-  // Listen for storage changes
   useEffect(() => {
     const handleStorageChange = (changes: any) => {
       if (changes[key]) {
@@ -27,13 +26,11 @@ export function useChromeStorage<T>(key: string) {
       }
     };
 
-    // Add listener
     if (chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener(handleStorageChange);
     }
 
     return () => {
-      // Remove listener on cleanup
       if (chrome.storage && chrome.storage.onChanged) {
         chrome.storage.onChanged.removeListener(handleStorageChange);
       }
@@ -43,7 +40,6 @@ export function useChromeStorage<T>(key: string) {
   const setItem = useCallback(
     async (value: T): Promise<void> => {
       await setStorageItem<T>(key, value);
-      // Update local state immediately too
       setData(value);
     },
     [key],

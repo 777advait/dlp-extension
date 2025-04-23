@@ -1,5 +1,3 @@
-"use client";
-
 import { useForm } from "react-hook-form";
 import * as FormComponent from "@/components/ui/form";
 import { z } from "zod";
@@ -10,16 +8,9 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useChromeStorage } from "@/utils/hooks/useChromeStorage";
-import { TRuleset } from "@/utils/types/rulesets.types";
+import { SRuleset, TRuleset } from "@/utils/types/rulesets.types";
 import { generateUUID } from "@/utils/gen-uuid";
 import { toast } from "sonner";
-
-const SRuleset = z.object({
-  url: z.string().url({ message: "Please enter a valid URL" }),
-  uploadExtensions: z.array(z.string()),
-  downloadExtensions: z.array(z.string()),
-  enabled: z.boolean(),
-});
 
 export default function RulesetForm({
   setIsDialogOpen,
