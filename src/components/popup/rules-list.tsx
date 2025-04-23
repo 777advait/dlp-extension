@@ -1,12 +1,15 @@
-import { TRulesets } from "@/utils/types/rulesets.types";
+import { TRuleset } from "@/utils/types/rulesets.types";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
+import { useChromeStorage } from "@/utils/hooks/useChromeStorage";
 
-export default function RulesList({ rulesets }: { rulesets: TRulesets[] }) {
+export default function RulesList() {
+  const { data: rulesets } = useChromeStorage<TRuleset[]>("rulesets");
+
   return (
     <>
-      {rulesets.length > 0 ? (
-        <ScrollArea className="h-[300px]">
+      {rulesets && rulesets.length > 0 ? (
+        <ScrollArea className="h-[250px]">
           {rulesets.map((ruleset) => (
             <div
               key={ruleset.id}

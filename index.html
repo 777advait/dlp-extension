@@ -1,14 +1,33 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Data Loss Prevention extension</title>
-  </head>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/pages/popup/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Loss Prevention extension</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #root {
+      width: 400px;
+      /* width of popup */
+      height: 450px;
+      /* height of popup */
+      overflow-y: auto;
+      /* scroll if content overflows */
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/pages/popup/main.tsx"></script>
+</body>
+
 </html>

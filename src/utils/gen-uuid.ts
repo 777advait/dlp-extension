@@ -6,4 +6,4 @@ const nanoid = customRandom(
   random,
 );
 
-export const getUUID = () => nanoid();
+export const generateUUID = () => nanoid();

@@ -7,8 +7,15 @@
   "action": {
     "default_popup": "index.html"
   },
-  "permissions": ["tabs", "scripting"],
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": [
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "icons": {
     "16": "icons/icon16.png"
   }
