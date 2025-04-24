@@ -1,7 +1,7 @@
 import { TRuleset } from "@/utils/types/rulesets.types";
 import { ScrollArea } from "../ui/scroll-area";
 import { useChromeStorage } from "@/utils/hooks/useChromeStorage";
-import EditRuleButton from "./edit-rule-button";
+import ViewRuleButton from "./view-rule-button";
 import DeleteRuleButton from "./delete-rule-button";
 
 export default function RulesList() {
@@ -21,7 +21,7 @@ export default function RulesList() {
                   {new URL(ruleset.url).host}
                 </h2>
                 <div className="flex items-center space-x-1 text-xs">
-                  <EditRuleButton />
+                  <ViewRuleButton ruleId={ruleset.id} />
                   <span>&bull;</span>
                   <DeleteRuleButton ruleId={ruleset.id} />
                 </div>

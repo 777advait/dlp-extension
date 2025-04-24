@@ -1,27 +1,28 @@
-import { useForm } from "react-hook-form";
 import * as FormComponent from "@/components/ui/form";
-import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { useChromeStorage } from "@/utils/hooks/useChromeStorage";
 import { SRuleset, TRuleset } from "@/utils/types/rulesets.types";
-import { generateUUID } from "@/utils/gen-uuid";
-import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Input } from "../ui/input";
+import React from "react";
+import { Badge } from "../ui/badge";
+import { X } from "lucide-react";
 import { createExtensionHandlers } from "@/utils/ruleset-form-utils";
+import { Button } from "../ui/button";
+import * as TabsComponent from "@/components/ui/tabs";
+import { Switch } from "../ui/switch";
 
-export default function RulesetForm({
-  setIsDialogOpen,
+export default function EditRulesetForm({
+  ruleId,
+  setOpenDialog,
 }: {
-  setIsDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  ruleId: string;
+  setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [step, setStep] = React.useState<"URL" | "UPLOAD" | "DOWNLOAD">("URL");
+  const { data, setItem } = useChromeStorage<TRuleset[]>("rulesets");
+  const ruleset = data?.find((r) => r.id === ruleId);
   const [extensionInput, setExtensionInput] = React.useState("");
-  const { data: existingRulesets, setItem } =
-    useChromeStorage<TRuleset[]>("rulesets");
 
   const form = useForm<z.infer<typeof SRuleset>>({
     defaultValues: {
@@ -32,6 +33,17 @@ export default function RulesetForm({
     },
     resolver: zodResolver(SRuleset),
   });
+
+  React.useEffect(() => {
+    if (ruleset) {
+      form.reset({
+        url: ruleset.url,
+        uploadExtensions: ruleset.uploadExtensions,
+        downloadExtensions: ruleset.downloadExtensions,
+        enabled: ruleset.enabled,
+      });
+    }
+  }, [ruleset, form]);
 
   const { setValue, getValues, watch } = form;
   const uploadExtensions = watch("uploadExtensions");
@@ -45,41 +57,32 @@ export default function RulesetForm({
       setExtensionInput,
     );
 
-  async function handleSubmit(values: z.infer<typeof SRuleset>) {
-    switch (step) {
-      case "URL":
-        setStep("UPLOAD");
-        break;
-      case "UPLOAD":
-        setStep("DOWNLOAD");
-        break;
-      case "DOWNLOAD":
-        try {
-          const newRuleset: TRuleset = {
-            id: generateUUID(),
-            ...values,
-          };
-
-          await setItem([...(existingRulesets ?? []), newRuleset]);
-          toast("Ruleset saved successfully");
-        } catch (error) {
-          toast.error("Failed to save ruleset");
-        }
-        setIsDialogOpen(false);
-        break;
-    }
-  }
-
-  const getButtonText = () => {
-    if (step === "DOWNLOAD") return "Save Rule";
-    return "Next";
+  const onSubmit = async (values: z.infer<typeof SRuleset>) => {
+    const updatedRulesets = data?.filter((r) => r.id !== ruleId) ?? [];
+    const updatedRuleset = {
+      id: ruleId,
+      ...values,
+    };
+    await setItem([...updatedRulesets, updatedRuleset]);
+    setOpenDialog(false);
   };
 
   return (
-    <div className="py-4">
-      <FormComponent.Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          {step === "URL" && (
+    <FormComponent.Form {...form}>
+      <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+        <TabsComponent.Tabs defaultValue="url">
+          <TabsComponent.TabsList className="grid w-full grid-cols-3">
+            <TabsComponent.TabsTrigger value="url">
+              URL
+            </TabsComponent.TabsTrigger>
+            <TabsComponent.TabsTrigger value="uploads">
+              Uploads
+            </TabsComponent.TabsTrigger>
+            <TabsComponent.TabsTrigger value="downloads">
+              Downloads
+            </TabsComponent.TabsTrigger>
+          </TabsComponent.TabsList>
+          <TabsComponent.TabsContent value="url">
             <FormComponent.FormField
               name="url"
               control={form.control}
@@ -93,9 +96,8 @@ export default function RulesetForm({
                 </FormComponent.FormItem>
               )}
             />
-          )}
-
-          {step === "UPLOAD" && (
+          </TabsComponent.TabsContent>
+          <TabsComponent.TabsContent value="uploads">
             <FormComponent.FormField
               name="uploadExtensions"
               control={form.control}
@@ -155,9 +157,8 @@ export default function RulesetForm({
                 </FormComponent.FormItem>
               )}
             />
-          )}
-
-          {step === "DOWNLOAD" && (
+          </TabsComponent.TabsContent>
+          <TabsComponent.TabsContent value="downloads">
             <FormComponent.FormField
               name="downloadExtensions"
               control={form.control}
@@ -222,24 +223,32 @@ export default function RulesetForm({
                 </FormComponent.FormItem>
               )}
             />
-          )}
-
-          <div className="flex justify-between pt-2">
-            {step !== "URL" && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setStep(step === "DOWNLOAD" ? "UPLOAD" : "URL")}
-              >
-                Back
-              </Button>
+          </TabsComponent.TabsContent>
+        </TabsComponent.Tabs>
+        <div className="flex justify-between pt-2">
+          <FormComponent.FormField
+            control={form.control}
+            name="enabled"
+            render={({ field }) => (
+              <FormComponent.FormItem className="flex items-center space-x-1">
+                <FormComponent.FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormComponent.FormControl>
+                <div className="">
+                  <FormComponent.FormLabel>Enabled</FormComponent.FormLabel>
+                </div>
+              </FormComponent.FormItem>
             )}
-            <div className={step === "URL" ? "ml-auto" : ""}>
-              <Button type="submit">{getButtonText()}</Button>
-            </div>
+          />
+
+          <div>
+            <Button>Save</Button>
           </div>
-        </form>
-      </FormComponent.Form>
-    </div>
+        </div>
+      </form>
+    </FormComponent.Form>
   );
 }
