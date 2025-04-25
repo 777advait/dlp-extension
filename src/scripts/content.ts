@@ -31,7 +31,6 @@ async function monitorFileInputs() {
           }
         }
       });
-      console.log("DLP added listener to file input:", input);
     });
   } catch (error) {
     console.error("Error in monitorFileInputs:", error);

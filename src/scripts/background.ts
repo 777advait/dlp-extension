@@ -1,6 +1,4 @@
-console.log("background.js loaded");
 
-// Type Definition
 type TRuleset = {
   id: string;
   url: string;
@@ -9,7 +7,7 @@ type TRuleset = {
   enabled: boolean;
 };
 
-// Helper Function to Get Ruleset by Hostname
+
 const getMatchingRuleset = async (
   hostname: string,
 ): Promise<TRuleset | null> => {
@@ -24,7 +22,7 @@ const getMatchingRuleset = async (
   });
 };
 
-// Helper Function to Get Active Tab Ruleset
+
 async function getActiveTabRuleset() {
   const [tab] = await chrome.tabs.query({
     active: true,
@@ -32,7 +30,6 @@ async function getActiveTabRuleset() {
   });
   if (tab?.url) {
     try {
-      console.log("using active tab url", tab.url);
       return await getMatchingRuleset(tab.url);
     } catch (error) {
       console.error("Error getting ruleset for active tab:", error);
@@ -42,10 +39,10 @@ async function getActiveTabRuleset() {
   return null;
 }
 
-//Global Object to Store Download Information
+
 let downloadInfo: { [key: number]: { filename: string } } = {};
 
-// Async function to process download, handle filename retrieval, and ruleset check
+
 async function processDownload(downloadItemId: number): Promise<void> {
   const results = await chrome.downloads.search({ id: downloadItemId });
 
@@ -84,16 +81,11 @@ async function processDownload(downloadItemId: number): Promise<void> {
   }
 }
 
-// Event Listener for New Downloads (onCreated)
 chrome.downloads.onCreated.addListener(async (downloadItem) => {
-  console.log("onCreated: ", downloadItem.id);
   processDownload(downloadItem.id);
 });
 
-// Event Listener for Determining Filename (onDeterminingFilename)
 chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-  // This event is reliable for suggesting, not guaranteed for fetching the value
-  console.log("onDeterminingFilename", downloadItem);
   suggest({ filename: downloadItem.filename });
   downloadInfo[downloadItem.id] = downloadItem;
 });
