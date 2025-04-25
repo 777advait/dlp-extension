@@ -1,26 +1,99 @@
-console.log("DLP Background script initialized");
+console.log("background.js loaded");
 
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Received message from content script:", message);
+// Type Definition
+type TRuleset = {
+  id: string;
+  url: string;
+  uploadExtensions: string[];
+  downloadExtensions: string[];
+  enabled: boolean;
+};
 
-  switch (message.type) {
-    case "BLOCKED_CONTENT_UPLOAD":
-      sendResponse({
-        status: "OK",
-        message: "Blocked!!",
-      });
-      window.alert("Content upload has been blocked.");
-      break;
-  }
-
-  if (message.type === "CONTENT_SCRIPT_LOADED") {
-    console.log("Content script loaded in tab:", sender.tab?.id);
-    sendResponse({
-      status: "OK",
-      message: "Background script received your message",
+// Helper Function to Get Ruleset by Hostname
+const getMatchingRuleset = async (
+  hostname: string,
+): Promise<TRuleset | null> => {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("rulesets", (data) => {
+      const rulesets: TRuleset[] = (data.rulesets as TRuleset[]) ?? [];
+      const match = rulesets.find(
+        (rule) => rule.enabled && hostname.includes(new URL(rule.url).hostname),
+      );
+      resolve(match ?? null);
     });
+  });
+};
+
+// Helper Function to Get Active Tab Ruleset
+async function getActiveTabRuleset() {
+  const [tab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (tab?.url) {
+    try {
+      console.log("using active tab url", tab.url);
+      return await getMatchingRuleset(tab.url);
+    } catch (error) {
+      console.error("Error getting ruleset for active tab:", error);
+      return null;
+    }
+  }
+  return null;
+}
+
+//Global Object to Store Download Information
+let downloadInfo: { [key: number]: { filename: string } } = {};
+
+// Async function to process download, handle filename retrieval, and ruleset check
+async function processDownload(downloadItemId: number): Promise<void> {
+  const results = await chrome.downloads.search({ id: downloadItemId });
+
+  if (!results || results.length === 0) {
+    console.warn(`DownloadItem with id ${downloadItemId} not found.`);
+    return;
   }
 
-  return true; // Keep the message channel open for async responses
+  const downloadItem = results[0];
+
+  let ruleset = await getActiveTabRuleset();
+
+  if (!ruleset) {
+    ruleset = await getMatchingRuleset(new URL(downloadItem.url).hostname);
+  }
+
+  if (!ruleset) return;
+
+  const filename = downloadInfo[downloadItem.id]
+    ? downloadInfo[downloadItem.id].filename
+    : downloadItem.filename;
+
+  const extension = filename.split(".").pop()?.toLowerCase()!;
+
+  if (ruleset.downloadExtensions.includes(`.${extension}`)) {
+    console.log(`DLP blocked download of file with .${extension} extension`);
+    chrome.downloads.cancel(downloadItem.id);
+    chrome.downloads.erase({ id: downloadItem.id });
+
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon16.png",
+      title: "Data Loss Prevention",
+      message: `Download of file with .${extension} extension blocked.`,
+    })
+  }
+}
+
+// Event Listener for New Downloads (onCreated)
+chrome.downloads.onCreated.addListener(async (downloadItem) => {
+  console.log("onCreated: ", downloadItem.id);
+  processDownload(downloadItem.id);
+});
+
+// Event Listener for Determining Filename (onDeterminingFilename)
+chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
+  // This event is reliable for suggesting, not guaranteed for fetching the value
+  console.log("onDeterminingFilename", downloadItem);
+  suggest({ filename: downloadItem.filename });
+  downloadInfo[downloadItem.id] = downloadItem;
 });
