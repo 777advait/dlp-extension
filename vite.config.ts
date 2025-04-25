@@ -15,6 +15,7 @@ export default defineConfig({
       "@assets": resolve(__dirname, "./src/assets"),
       "@lib": resolve(__dirname, "./src/lib"),
       "@utils": resolve(__dirname, "./src/utils"),
+      "@scripts": resolve(__dirname, "./src/scripts"),
     },
   },
   build: {
@@ -22,13 +23,15 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: resolve(__dirname, "index.html"),
-        // Add additional pages as needed
-        // options: resolve(__dirname, "options.html"),
-        // background: resolve(__dirname, "src/background/index.ts"),
-        // contentScript: resolve(__dirname, "src/contentScript/index.ts"),
+        content: resolve(__dirname, "src/scripts/content.ts"),
+        background: resolve(__dirname, "src/scripts/background.ts"),
       },
       output: {
         entryFileNames: (chunk) => {
+          // Don't add hash to content and background scripts
+          if (chunk.name === "content" || chunk.name === "background") {
+            return `scripts/[name].js`;
+          }
           return `assets/${chunk.name}/[name].[hash].js`;
         },
         chunkFileNames: "assets/js/[name].[hash].js",

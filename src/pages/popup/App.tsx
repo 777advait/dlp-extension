@@ -35,7 +35,7 @@ export default function App() {
                     Create a new rule for upload/download
                   </DialogComponent.DialogDescription>
                 </DialogComponent.DialogHeader>
-                <RulesetForm mode="add" setIsDialogOpen={setIsDialogOpen} />
+                <RulesetForm setIsDialogOpen={setIsDialogOpen} />
               </DialogComponent.DialogContent>
             </DialogComponent.Dialog>
           </div>
